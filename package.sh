@@ -40,6 +40,26 @@ pkgbuild --root "$PKGROOT" --component-plist "$DIST/components.plist" --identifi
   "$DIST/component.pkg" >/dev/null
 productbuild --package "$DIST/component.pkg" "${SIGN_ARGS[@]}" "$STAGE/Install Avro Next.pkg" >/dev/null
 
+# Submits a file to Apple's notary service, fails loudly if it isn't accepted,
+# and staples the ticket so Gatekeeper can verify it even offline.
+notarize() {
+  local file=$1 out id result
+  echo "==> Notarizing $(basename "$file") (this can take a few minutes)"
+  out=$(xcrun notarytool submit "$file" --keychain-profile "$NOTARY_PROFILE" --wait --output-format json)
+  id=$(print -r -- "$out" | plutil -extract id raw -o - -)
+  result=$(print -r -- "$out" | plutil -extract status raw -o - -)
+  if [[ $result != Accepted ]]; then
+    echo "Notarization of $(basename "$file") ended with status: $result"
+    xcrun notarytool log "$id" --keychain-profile "$NOTARY_PROFILE" || true
+    exit 1
+  fi
+  xcrun stapler staple "$file"
+}
+if [[ -n ${NOTARY_PROFILE:-} ]]; then
+  [[ -n ${SIGN_APP_ID:-} && -n ${SIGN_PKG_ID:-} ]] || { echo "Notarizing needs SIGN_APP_ID and SIGN_PKG_ID"; exit 1; }
+  notarize "$STAGE/Install Avro Next.pkg"
+fi
+
 cat > "$STAGE/Uninstall Avro Next.command" <<'S'
 #!/bin/zsh
 # Removes Avro Next. Asks for your password because the app lives in /Library/Input Methods.
@@ -79,10 +99,7 @@ DMG=$DIST/Avro-Next-$VERSION.dmg
 hdiutil create -quiet -volname "Avro Next" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 [[ -n ${SIGN_APP_ID:-} ]] && codesign --force --timestamp --sign "$SIGN_APP_ID" "$DMG"
 
-if [[ -n ${NOTARY_PROFILE:-} ]]; then
-  xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
-  xcrun stapler staple "$DMG"
-fi
+[[ -n ${NOTARY_PROFILE:-} ]] && notarize "$DMG"
 # Remove the staging copy so LaunchServices never launches it instead of the installed one.
 LSR=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 $LSR -u "$PWD/$PKGROOT/Avro Next.app" 2>/dev/null || true
