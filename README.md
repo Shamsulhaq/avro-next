@@ -52,6 +52,28 @@ Open the input menu in the menu bar and choose **Avro Next Settings…**.
 
 Your learned choices and auto-correct entries are stored in `~/Library/Application Support/AvroNext/`.
 
+## Troubleshooting
+
+**Avro Next isn't in the Input Sources list**
+- Log out and back in after installing. macOS only loads new input methods at login.
+- Make sure the app is in `/Library/Input Methods/Avro Next.app`.
+- On macOS 27 an input method without a real code signature may be hidden from the list. Use a signed release, or sign your own build (see [Build from source](#build-from-source)).
+
+**Typing gives plain English letters**
+- Avro Next isn't the active input source. Pick it from the input menu in the menu bar, or press the 🌐 key.
+
+**The installer "can't be opened"**
+- Open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to the installer.
+
+**It picks the wrong word for something I type often**
+- Type the word, choose the right one with the arrow keys, and press Space. Avro Next remembers that choice.
+- To clear all remembered choices, use **Settings > Forget Learned…**.
+
+**Settings changes don't take effect**
+- They apply immediately for the next word you type. If something looks stuck, switch to another input source and back.
+
+**Still stuck?** [Open an issue](../../issues) with your macOS version and what you did.
+
 ## Uninstall
 
 Double-click **Uninstall Avro Next.command** in the DMG. Then log out and back in.
@@ -83,6 +105,8 @@ NOTARY_PROFILE=<profile from: xcrun notarytool store-credentials> \
 ./package.sh
 ```
 
+Maintainers: releases are built and published automatically by GitHub Actions when you push a version tag. See [docs/RELEASING.md](docs/RELEASING.md). Version history is in [CHANGELOG.md](CHANGELOG.md).
+
 ## Project layout
 
 ```text
@@ -91,6 +115,8 @@ Resources/    Info.plist
 Tests/        Headless engine and selection tests (run by build.sh)
 Tools/        Icon generator and an input-source diagnostic (tis_check.swift)
 riti/         OpenBangla riti engine (git submodule)
+docs/         Release guide
+.github/      Release workflow (build, package, publish on tag)
 build.sh      Build + test
 package.sh    DMG with installer, uninstaller and read-me
 ```

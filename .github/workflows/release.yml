@@ -1,0 +1,92 @@
+# Builds Avro Next on a GitHub-hosted Apple Silicon Mac and publishes a Release.
+#
+# Trigger: push a tag like v0.1.3   (git tag v0.1.3 && git push origin v0.1.3)
+#
+# Signing is optional. Without the secrets below the DMG is ad-hoc signed and the
+# Release is marked as a pre-release, because macOS 27 may not list an unsigned
+# input method in Input Sources. Add these repository secrets for a proper,
+# notarized release (Settings > Secrets and variables > Actions):
+#   MACOS_CERT_P12_BASE64   base64 of a .p12 holding both Developer ID certificates
+#   MACOS_CERT_PASSWORD     password of that .p12
+#   SIGN_APP_ID             e.g. "Developer ID Application: Your Name (TEAMID)"
+#   SIGN_PKG_ID             e.g. "Developer ID Installer: Your Name (TEAMID)"
+#   NOTARY_APPLE_ID         Apple Account email
+#   NOTARY_TEAM_ID          Team ID
+#   NOTARY_PASSWORD         app-specific password
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15   # Apple Silicon
+    steps:
+      - name: Check out (with the riti submodule)
+        uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Rust toolchain
+        run: |
+          rustup default stable
+          cargo --version
+
+      - name: Import signing certificates
+        id: signing
+        env:
+          P12: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          if [ -z "$P12" ]; then
+            echo "No signing secrets: building an ad-hoc signed pre-release."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/cert.p12"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Store notarization credentials
+        if: steps.signing.outputs.signed == 'true'
+        env:
+          APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
+          PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+        run: xcrun notarytool store-credentials avronext --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$PASSWORD"
+
+      - name: Build, test and package
+        env:
+          SIGN_APP_ID: ${{ steps.signing.outputs.signed == 'true' && secrets.SIGN_APP_ID || '' }}
+          SIGN_PKG_ID: ${{ steps.signing.outputs.signed == 'true' && secrets.SIGN_PKG_ID || '' }}
+          NOTARY_PROFILE: ${{ steps.signing.outputs.signed == 'true' && 'avronext' || '' }}
+        run: ./package.sh
+
+      - name: Publish the Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIGNED: ${{ steps.signing.outputs.signed }}
+        run: |
+          FLAGS="--generate-notes"
+          if [ "$SIGNED" != "true" ]; then FLAGS="$FLAGS --prerelease"; fi
+          gh release create "$GITHUB_REF_NAME" dist/*.dmg --title "Avro Next ${GITHUB_REF_NAME#v}" $FLAGS
+
+      - name: Keep the DMG as a build artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: avro-next-dmg
+          path: dist/*.dmg
