@@ -13,7 +13,15 @@ Releases are built and published by GitHub Actions (`.github/workflows/release.y
    git push origin main v0.1.4
    ```
 
-4. Watch the **Actions** tab. When the run finishes, the DMG is attached to a new Release on the **Releases** page.
+4. Watch the **Actions** tab. When the run finishes, the DMG and `update.json` are attached to a new Release on the **Releases** page.
+
+The tag must match the version in `Info.plist` (`v0.1.4` for `0.1.4`). The workflow stops if they differ, so installed copies are never offered a mislabeled update.
+
+## How installed copies find updates
+
+Each Release carries an `update.json` with the version, whether it's a pre-release, the DMG link, its SHA-256 and size. Avro Next reads `https://github.com/<repo>/releases.atom` to find the newest tags, then that tag's `update.json`. Neither uses the rate-limited GitHub API. The repository is set by the `AvroNextUpdateRepo` key in `Resources/Info.plist`; change it if you fork the project.
+
+Don't delete or replace a published DMG without also replacing `update.json`. A checksum mismatch makes installed copies refuse the update.
 
 You can also start a build by hand from **Actions > Release > Run workflow**. That build doesn't publish a Release; download the DMG from the run's **Artifacts**.
 

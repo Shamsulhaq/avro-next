@@ -5,6 +5,7 @@ import InputMethodKit
 let connectionName = Bundle.main.infoDictionary?["InputMethodConnectionName"] as? String ?? "AvroNext_Connection"
 let imkServer = IMKServer(name: connectionName, bundleIdentifier: Bundle.main.bundleIdentifier)
 SharedEngine.start()
+MainActor.assumeIsolated { UpdateManager.shared.start() }
 
 // Opening the app directly (Finder/Spotlight) shows the settings, so users can find them.
 final class AppDelegate: NSObject, NSApplicationDelegate {

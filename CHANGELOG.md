@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+
+- Update notifications: Avro Next checks GitHub daily and notifies you when a new version is out. Install it from the notification or the input menu ("Install Avro Next x.y.z…"). Downloads are verified with SHA-256 before the installer opens.
+- Settings > Updates: turn automatic checks on or off, include or skip pre-releases, and check now.
+
 ## 0.1.3
 
 - Avro Next's own compact candidate bar replaces the system one. Arrow keys now move between suggestions reliably, and a click commits a word.

@@ -52,6 +52,15 @@ Open the input menu in the menu bar and choose **Avro Next Settings…**.
 
 Your learned choices and auto-correct entries are stored in `~/Library/Application Support/AvroNext/`.
 
+## Updates
+
+Avro Next checks GitHub for a new version once a day and shows a notification when one is available. Click the notification, or choose **Install Avro Next x.y.z…** from the input menu, then **Install**. Avro Next downloads the new version to your Downloads folder, checks its SHA-256 checksum against the release, and opens the normal macOS installer. After it installs, log out and back in.
+
+- **Check now:** input menu > **Check for Updates…**, or **Settings > Updates > Check Now**.
+- **Turn it off:** **Settings > Updates**. You can also skip a single version from the update prompt.
+- **Pre-releases:** test versions are included by default. Turn off **Include pre-release versions** to get stable releases only.
+- **Privacy:** the check only downloads the public release list from github.com. Nothing about you or your typing is sent.
+
 ## Troubleshooting
 
 **Avro Next isn't in the Input Sources list**

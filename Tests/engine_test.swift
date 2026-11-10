@@ -131,6 +131,58 @@ do {
     else { print("FAIL candidate state"); failures += 1 }
 }
 
+// Update logic (offline).
+do {
+    let repo = "Shamsulhaq/avro-next"
+    var ok = true
+    ok = ok && UpdateCore.isNewer("0.1.4", than: "0.1.3")
+    ok = ok && UpdateCore.isNewer("v0.1.10", than: "0.1.9")
+    ok = ok && UpdateCore.isNewer("1.0", than: "0.9.9")
+    ok = ok && !UpdateCore.isNewer("0.1.3", than: "0.1.3")
+    ok = ok && !UpdateCore.isNewer("0.1.3", than: "0.1.4")
+    ok = ok && !UpdateCore.isNewer("0.1", than: "0.1.0")
+    if ok { print("ok   version comparison") } else { print("FAIL version comparison"); failures += 1 }
+
+    let atom = """
+    <feed><entry><link rel="alternate" href="https://github.com/\(repo)/releases/tag/v0.1.4"/></entry>
+    <entry><link href="https://github.com/\(repo)/releases/tag/v0.1.3"/><id>tag:github.com,2008:Repository/1/v0.1.3</id></entry>
+    <entry><link href="https://github.com/other/repo/releases/tag/v9.9.9"/></entry></feed>
+    """
+    let tags = UpdateCore.releaseTags(fromAtom: Data(atom.utf8), repo: repo)
+    if tags == ["v0.1.4", "v0.1.3"] { print("ok   release feed parsing") }
+    else { print("FAIL release feed parsing: \(tags)"); failures += 1 }
+
+    let trusted = UpdateCore.isTrustedDownload(URL(string: "https://github.com/\(repo)/releases/download/v0.1.4/a.dmg")!, repo: repo)
+    let http = UpdateCore.isTrustedDownload(URL(string: "http://github.com/\(repo)/releases/download/v0.1.4/a.dmg")!, repo: repo)
+    let elsewhere = UpdateCore.isTrustedDownload(URL(string: "https://evil.example/\(repo)/releases/download/a.dmg")!, repo: repo)
+    let otherRepo = UpdateCore.isTrustedDownload(URL(string: "https://github.com/other/repo/releases/download/v1/a.dmg")!, repo: repo)
+    if trusted && !http && !elsewhere && !otherRepo { print("ok   download URL trust") }
+    else { print("FAIL download URL trust"); failures += 1 }
+
+    let file = URL(fileURLWithPath: tmp + "/blob.bin")
+    try? Data("avro".utf8).write(to: file)
+    let sha = String(repeating: "0", count: 64)   // wrong on purpose
+    let realSha = { () -> String in
+        let p = Process(); p.executableURL = URL(fileURLWithPath: "/usr/bin/shasum")
+        p.arguments = ["-a", "256", file.path]; let pipe = Pipe(); p.standardOutput = pipe
+        try? p.run(); p.waitUntilExit()
+        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.split(separator: " ").first.map(String.init) ?? ""
+    }()
+    let good = UpdateCore.verify(fileAt: file, sha256: realSha, size: 4)
+    let badSha = UpdateCore.verify(fileAt: file, sha256: sha, size: 4)
+    let badSize = UpdateCore.verify(fileAt: file, sha256: realSha, size: 5)
+    if good && !badSha && !badSize { print("ok   checksum verification") }
+    else { print("FAIL checksum verification"); failures += 1 }
+
+    let manifest = """
+    {"version":"0.1.4","prerelease":true,"dmg_url":"https://github.com/\(repo)/releases/download/v0.1.4/Avro-Next-0.1.4.dmg",
+     "sha256":"\(realSha)","size":4,"notes_url":"https://github.com/\(repo)/releases/tag/v0.1.4"}
+    """
+    if let info = try? JSONDecoder().decode(UpdateInfo.self, from: Data(manifest.utf8)), info.version == "0.1.4", info.prerelease {
+        print("ok   update.json format")
+    } else { print("FAIL update.json format"); failures += 1 }
+}
+
 // Live settings: switch layout without recreating the engine.
 func typed(_ text: String) -> String {
     var last: RitiSuggestion?

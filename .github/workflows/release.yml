@@ -75,6 +75,32 @@ jobs:
           NOTARY_PROFILE: ${{ steps.signing.outputs.signed == 'true' && 'avronext' || '' }}
         run: ./package.sh
 
+      # update.json is what installed copies of Avro Next read to find updates.
+      - name: Write the update manifest
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          SIGNED: ${{ steps.signing.outputs.signed }}
+        run: |
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match the app version $VERSION in Resources/Info.plist"
+            exit 1
+          fi
+          DMG="dist/Avro-Next-$VERSION.dmg"
+          PRERELEASE=$([ "$SIGNED" = "true" ] && echo false || echo true)
+          BASE="https://github.com/$GITHUB_REPOSITORY/releases"
+          cat > dist/update.json <<EOF
+          {
+            "version": "$VERSION",
+            "prerelease": $PRERELEASE,
+            "dmg_url": "$BASE/download/$GITHUB_REF_NAME/Avro-Next-$VERSION.dmg",
+            "sha256": "$(shasum -a 256 "$DMG" | cut -d' ' -f1)",
+            "size": $(stat -f%z "$DMG"),
+            "notes_url": "$BASE/tag/$GITHUB_REF_NAME"
+          }
+          EOF
+          cat dist/update.json
+
       - name: Publish the Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -83,7 +109,7 @@ jobs:
         run: |
           FLAGS="--generate-notes"
           if [ "$SIGNED" != "true" ]; then FLAGS="$FLAGS --prerelease"; fi
-          gh release create "$GITHUB_REF_NAME" dist/*.dmg --title "Avro Next ${GITHUB_REF_NAME#v}" $FLAGS
+          gh release create "$GITHUB_REF_NAME" dist/*.dmg dist/update.json --title "Avro Next ${GITHUB_REF_NAME#v}" $FLAGS
 
       - name: Keep the DMG as a build artifact
         uses: actions/upload-artifact@v4.6.2

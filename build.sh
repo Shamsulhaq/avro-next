@@ -31,7 +31,7 @@ rm -rf "$BUILD"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/data"
 echo "==> Engine test (headless)"
 mkdir -p "$BUILD/test" && cp Tests/engine_test.swift "$BUILD/test/main.swift"
 swiftc -O -target $ARCH-apple-macos$MINOS -import-objc-header Sources/Bridging-Header.h \
-  -Xcc -I"$RITI/include" Sources/Engine.swift Sources/Settings.swift Sources/KeyMap.swift Sources/CandidateState.swift "$BUILD/test/main.swift" \
+  -Xcc -I"$RITI/include" Sources/Engine.swift Sources/Settings.swift Sources/KeyMap.swift Sources/CandidateState.swift Sources/UpdateCore.swift "$BUILD/test/main.swift" \
   "$LIB" -o "$BUILD/engine_test"
 "$BUILD/engine_test" "$RITI/data"
 
@@ -39,7 +39,7 @@ echo "==> Building app"
 swiftc -O -target $ARCH-apple-macos$MINOS -module-name AvroNext \
   -import-objc-header Sources/Bridging-Header.h -Xcc -I"$RITI/include" \
   Sources/main.swift Sources/Engine.swift Sources/Settings.swift Sources/KeyMap.swift Sources/CandidateState.swift \
-  Sources/SettingsWindow.swift Sources/CandidateWindow.swift Sources/AvroController.swift \
+  Sources/SettingsWindow.swift Sources/UpdateCore.swift Sources/UpdateManager.swift Sources/CandidateWindow.swift Sources/AvroController.swift \
   "$LIB" -framework Cocoa -framework InputMethodKit -o "$APP/Contents/MacOS/AvroNext"
 
 cp Resources/Info.plist "$APP/Contents/Info.plist"

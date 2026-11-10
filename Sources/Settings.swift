@@ -41,6 +41,10 @@ struct Settings: Equatable {
     var fixedNumpad = true
     var fixedOldKarOrder = false
 
+    var checkForUpdates = true
+    // Releases are pre-releases until Developer ID signing is set up, so include them by default.
+    var includePrereleases = true
+
     var candidateStyle: CandidateStyle = .row
     var candidateFontSize = 13.0
 
@@ -61,6 +65,8 @@ struct Settings: Equatable {
         if let v = d["fixedOldReph"] as? Bool { s.fixedOldReph = v }
         if let v = d["fixedNumpad"] as? Bool { s.fixedNumpad = v }
         if let v = d["fixedOldKarOrder"] as? Bool { s.fixedOldKarOrder = v }
+        if let v = d["checkForUpdates"] as? Bool { s.checkForUpdates = v }
+        if let v = d["includePrereleases"] as? Bool { s.includePrereleases = v }
         if let v = d["candidateFontSize"] as? Double { s.candidateFontSize = min(max(v, 11), 32) }
         return s
     }
@@ -79,6 +85,8 @@ struct Settings: Equatable {
             "fixedNumpad": fixedNumpad,
             "fixedOldKarOrder": fixedOldKarOrder,
             "candidateFontSize": candidateFontSize,
+            "checkForUpdates": checkForUpdates,
+            "includePrereleases": includePrereleases,
         ] as [String: Any], forKey: Settings.key)
         NotificationCenter.default.post(name: Settings.didChange, object: nil)
     }

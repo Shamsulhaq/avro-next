@@ -72,11 +72,30 @@ final class AvroController: IMKInputController {
         let prefs = NSMenuItem(title: "Avro Next Settings…", action: #selector(showSettings(_:)), keyEquivalent: "")
         prefs.target = self
         menu.addItem(prefs)
+
+        // Input method callbacks always arrive on the main thread.
+        let available = MainActor.assumeIsolated { UpdateManager.shared.available }
+        let updateItem: NSMenuItem
+        if let info = available {
+            updateItem = NSMenuItem(title: "Install Avro Next \(info.version)…", action: #selector(installUpdate(_:)), keyEquivalent: "")
+        } else {
+            updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates(_:)), keyEquivalent: "")
+        }
+        updateItem.target = self
+        menu.addItem(updateItem)
         return menu
     }
 
     @objc private func showSettings(_ sender: Any?) {
         SettingsWindowController.shared.present()
+    }
+
+    @objc private func checkForUpdates(_ sender: Any?) {
+        MainActor.assumeIsolated { UpdateManager.shared.check(userInitiated: true) }
+    }
+
+    @objc private func installUpdate(_ sender: Any?) {
+        MainActor.assumeIsolated { UpdateManager.shared.promptInstall() }
     }
 
     // MARK: - Key handling

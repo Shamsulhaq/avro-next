@@ -19,6 +19,10 @@ final class SettingsWindowController: NSWindowController {
     private let stylePopup = NSPopUpButton()
     private let fontStepper = NSStepper()
     private let fontLabel = NSTextField(labelWithString: "")
+    private let updateCheck = NSButton(checkboxWithTitle: "Check for updates automatically", target: nil, action: nil)
+    private let prereleaseCheck = NSButton(checkboxWithTitle: "Include pre-release (test) versions", target: nil, action: nil)
+    private let updateStatus = NSTextField(labelWithString: "")
+    private var updateObserver: NSObjectProtocol?
     private let root = NSStackView()
 
     init() {
@@ -97,11 +101,24 @@ final class SettingsWindowController: NSWindowController {
         ], spacing: 8)
         let data = stack([header("Data"), buttons], spacing: 8)
 
+        [updateCheck, prereleaseCheck].forEach { $0.target = self; $0.action = #selector(changed) }
+        updateStatus.font = .systemFont(ofSize: 11)
+        updateStatus.textColor = .secondaryLabelColor
+        updateStatus.lineBreakMode = .byTruncatingTail
+        updateStatus.widthAnchor.constraint(lessThanOrEqualToConstant: Self.contentWidth - 130).isActive = true
+        let checkNow = NSStackView(views: [smallButton("Check Now", #selector(checkUpdatesNow)), updateStatus])
+        checkNow.spacing = 8
+        let updates = stack([header("Updates"), updateCheck, prereleaseCheck, checkNow], spacing: 8)
+        updateObserver = NotificationCenter.default.addObserver(
+            forName: .avroUpdateStatusChanged, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updateStatus.stringValue = UpdateManager.shared.status }
+        }
+
         root.orientation = .vertical
         root.alignment = .leading
         root.spacing = 18
         root.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 16, right: 20)
-        [typing, candidates, data, about].forEach(root.addArrangedSubview)
+        [typing, candidates, updates, data, about].forEach(root.addArrangedSubview)
         root.translatesAutoresizingMaskIntoConstraints = false
 
         let content = NSView()
@@ -159,6 +176,9 @@ final class SettingsWindowController: NSWindowController {
         englishCheck.isHidden = settings.layout != .avroPhonetic
         fontStepper.doubleValue = settings.candidateFontSize
         fontLabel.stringValue = "\(Int(settings.candidateFontSize)) pt"
+        updateCheck.state = settings.checkForUpdates ? .on : .off
+        prereleaseCheck.state = settings.includePrereleases ? .on : .off
+        updateStatus.stringValue = UpdateManager.shared.status
         fitWindow(animated: animated)
     }
 
@@ -180,8 +200,14 @@ final class SettingsWindowController: NSWindowController {
         settings.smartQuotes = quotesCheck.state == .on
         settings.candidateFontSize = fontStepper.doubleValue
         for (button, path) in fixedChecks { settings[keyPath: path] = button.state == .on }
+        settings.checkForUpdates = updateCheck.state == .on
+        settings.includePrereleases = prereleaseCheck.state == .on
         settings.save()
         reflect(animated: true)
+    }
+
+    @objc private func checkUpdatesNow() {
+        UpdateManager.shared.check(userInitiated: true)
     }
 
     @objc private func restoreDefaults() {
