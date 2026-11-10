@@ -61,7 +61,7 @@ Double-click **Uninstall Avro Next.command** in the DMG. Then log out and back i
 You need the Xcode Command Line Tools (`xcode-select --install`) and [Rust](https://rustup.rs). Full Xcode isn't required.
 
 ```sh
-git clone --recurse-submodules https://github.com/<your-account>/avro-next.git
+git clone --recurse-submodules https://github.com/Shamsulhaq/avro-next.git
 cd avro-next
 ./build.sh          # builds build/Avro Next.app and runs the engine tests
 ./package.sh        # builds dist/Avro-Next-<version>.dmg with the installer
