@@ -32,6 +32,8 @@ SIGN_ARGS=()
 # Never relocate: without this, Installer may "upgrade" a stray copy of the app
 # elsewhere on disk (e.g. a build folder) instead of installing to /Library/Input Methods.
 pkgbuild --analyze --root "$PKGROOT" "$DIST/components.plist" >/dev/null
+# Newer pkgbuild writes the key, older ones omit it: replace it either way.
+/usr/libexec/PlistBuddy -c "Delete :0:BundleIsRelocatable" "$DIST/components.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Add :0:BundleIsRelocatable bool false" "$DIST/components.plist"
 pkgbuild --root "$PKGROOT" --component-plist "$DIST/components.plist" --identifier org.avronext.inputmethod.AvroNext.pkg --version "$VERSION" \
   --install-location "/Library/Input Methods" --scripts "$DIST/scripts" \
