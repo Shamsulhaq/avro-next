@@ -9,3 +9,4 @@
 - 2026-11-10 v0.1.3 CONFIRMED by user on macOS 27: typing, arrow-key candidate selection and remembered choices work (Apple Development test-signed build). Next: Developer ID signing/notarization for distribution.
 - 2026-11-10 Published v0.1.3 pre-release via Actions (ad-hoc signed DMG): https://github.com/Shamsulhaq/avro-next/releases/tag/v0.1.3
 - 2026-11-10 v0.1.4 published (pre-release) with update.json; live check: 0.1.3 -> offered 0.1.4, DMG SHA verified; installed locally (dev-signed). Alert/notification UI not yet seen live.
+- 2026-11-11 Added CONTRIBUTING.md, Developer + Contributing README sections (public GitHub profile info only, no email), issue/PR templates, CI workflow (build+test on push/PR), Settings footer links + credit. Unreleased (next tag).
