@@ -84,8 +84,15 @@ final class SettingsWindowController: NSWindowController {
         ])
         buttons.spacing = 8
 
+        let links = NSStackView(views: [
+            linkButton("Project on GitHub", "https://github.com/Shamsulhaq/avro-next"),
+            linkButton("Report a Problem", "https://github.com/Shamsulhaq/avro-next/issues/new/choose"),
+            linkButton("Contribute", "https://github.com/Shamsulhaq/avro-next/blob/main/CONTRIBUTING.md"),
+        ])
+        links.spacing = 14
+
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
-        let about = NSTextField(labelWithString: "Avro Next \(version)  ·  Engine: OpenBangla riti (MPL-2.0)")
+        let about = NSTextField(labelWithString: "Avro Next \(version) by Shamsul Haq Bhuyan  ·  Engine: OpenBangla riti (MPL-2.0)")
         about.font = .systemFont(ofSize: 11)
         about.textColor = .secondaryLabelColor
 
@@ -118,7 +125,8 @@ final class SettingsWindowController: NSWindowController {
         root.alignment = .leading
         root.spacing = 18
         root.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 16, right: 20)
-        [typing, candidates, updates, data, about].forEach(root.addArrangedSubview)
+        let footer = stack([links, about], spacing: 6)
+        [typing, candidates, updates, data, footer].forEach(root.addArrangedSubview)
         root.translatesAutoresizingMaskIntoConstraints = false
 
         let content = NSView()
@@ -144,6 +152,22 @@ final class SettingsWindowController: NSWindowController {
         b.controlSize = .small
         b.bezelStyle = .rounded
         return b
+    }
+
+    /// A borderless, link-coloured button that opens a URL in the browser.
+    private func linkButton(_ title: String, _ url: String) -> NSButton {
+        let b = NSButton(title: title, target: self, action: #selector(openLink(_:)))
+        b.isBordered = false
+        b.attributedTitle = NSAttributedString(string: title, attributes: [
+            .foregroundColor: NSColor.linkColor, .font: NSFont.systemFont(ofSize: 12)])
+        b.toolTip = url
+        b.identifier = NSUserInterfaceItemIdentifier(url)
+        return b
+    }
+
+    @objc private func openLink(_ sender: NSButton) {
+        guard let raw = sender.identifier?.rawValue, let url = URL(string: raw) else { return }
+        NSWorkspace.shared.open(url)
     }
 
     private func header(_ text: String) -> NSTextField {

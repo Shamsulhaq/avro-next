@@ -122,13 +122,35 @@ Maintainers: releases are built and published automatically by GitHub Actions wh
 Sources/      Swift input method: controller, candidate bar, settings, riti wrapper
 Resources/    Info.plist
 Tests/        Headless engine and selection tests (run by build.sh)
-Tools/        Icon generator and an input-source diagnostic (tis_check.swift)
+Tools/        Icon and demo-video generators, input-source diagnostic, signing setup
 riti/         OpenBangla riti engine (git submodule)
 docs/         Release guide
-.github/      Release workflow (build, package, publish on tag)
+.github/      CI, release workflow, issue and pull request templates
 build.sh      Build + test
 package.sh    DMG with installer, uninstaller and read-me
 ```
+
+## Contributing
+
+Contributions are welcome, from bug reports and testing to code and documentation. Avro Next is open to everyone.
+
+- **Found a bug or a wrong word?** [Open an issue](https://github.com/Shamsulhaq/avro-next/issues/new/choose).
+- **Want to write code?** Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, how the code is organised, and the pull request steps. Issues labelled `good first issue` are a good place to start.
+- **Every pull request** is built and tested automatically by CI on an Apple Silicon Mac.
+
+Please be kind and respectful; see the code of conduct in [CONTRIBUTING.md](CONTRIBUTING.md#code-of-conduct).
+
+## Developer
+
+Avro Next is created and maintained by **Shamsul Haq Bhuyan**, a software engineer.
+
+- GitHub: [@Shamsulhaq](https://github.com/Shamsulhaq)
+- Website: [shamsul.me](http://shamsul.me)
+- X (Twitter): [@Bm_Shamsulhaq](https://x.com/Bm_Shamsulhaq)
+
+For bugs and feature requests, please use [GitHub Issues](https://github.com/Shamsulhaq/avro-next/issues) rather than direct messages, so others can find the answers too.
+
+All contributors are listed on the [contributors page](https://github.com/Shamsulhaq/avro-next/graphs/contributors).
 
 ## Credits and license
 

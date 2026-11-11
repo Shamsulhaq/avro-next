@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Phonetic rules or dictionary (riti engine)
+    url: https://github.com/OpenBangla/riti/issues
+    about: Problems with the riti engine itself can also be reported to OpenBangla.

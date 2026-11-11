@@ -1,0 +1,25 @@
+# Builds and tests every push to main and every pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15   # Apple Silicon
+    steps:
+      - name: Check out (with the riti submodule)
+        uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Rust toolchain
+        run: rustup default stable
+
+      - name: Build and run the tests
+        run: ./build.sh

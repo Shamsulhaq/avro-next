@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Settings: links to the project, problem reports and contributing; developer credit in the About line.
+- Contributor docs (CONTRIBUTING.md), issue and pull request templates, and CI that builds and tests every pull request.
+
 ## 0.1.4
 
 - Update notifications: Avro Next checks GitHub daily and notifies you when a new version is out. Install it from the notification or the input menu ("Install Avro Next x.y.z…"). Downloads are verified with SHA-256 before the installer opens.
