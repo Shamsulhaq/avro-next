@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.5
 
 - Settings: links to the project, problem reports and contributing; developer credit in the About line.
 - Contributor docs (CONTRIBUTING.md), issue and pull request templates, and CI that builds and tests every pull request.
